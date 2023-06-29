@@ -1,30 +1,8 @@
-/*******************************************************************************
- * Copyright (c) The JETSCAPE Collaboration, 2018
- *
- * Modular, task-based framework for simulating all aspects of heavy-ion collisions
- * 
- * For the list of contributors see AUTHORS.
- *
- * Report issues at https://github.com/JETSCAPE/JETSCAPE/issues
- *
- * or via email to bugs.jetscape@gmail.com
- *
- * Distributed under the GNU General Public License 3.0 (GPLv3 or later).
- * See COPYING for details.
- ******************************************************************************/
-
-#ifndef JETSCAPEWRITERHEPMC_H
-#define JETSCAPEWRITERHEPMC_H
+#ifndef JETSCAPEWRITERHEPMCFIFO_H
+#define JETSCAPEWRITERHEPMCFIFO_H
 
 #include <fstream>
 #include <string>
-#include <errno.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <iostream>
-#include <sys/types.h>
-#include <sys/stat.h>
 
 #include "JetScapeWriter.h"
 #include "PartonShower.h"
@@ -34,37 +12,36 @@
 #include "HepMC3/WriterAscii.h"
 #include "HepMC3/Print.h"
 
+
 // using namespace HepMC;
 using HepMC3::GenEvent;
 using HepMC3::GenVertex;
 using HepMC3::GenParticle;
 using HepMC3::GenVertexPtr;
 using HepMC3::GenParticlePtr;
-using namespace std;
-namespace Jetscape {
 
-class JetScapeWriterHepMC : public JetScapeWriter, public HepMC3::WriterAscii {
+// using namespace Jetscape;
+
+
+
+// namespace Jetscape {
+using namespace Jetscape;
+
+class JetScapeWriterHepMCfifo : public JetScapeWriter, public HepMC3::WriterAscii {
 
 public:
-  JetScapeWriterHepMC() : HepMC3::WriterAscii("") { SetId("HepMC writer"); };
-  JetScapeWriterHepMC(string m_file_name_out)
-      : JetScapeWriter(m_file_name_out), HepMC3::WriterAscii(m_file_name_out) {
+  JetScapeWriterHepMCfifo() : HepMC3::WriterAscii("") { SetId("HepMC writer"); };
+  JetScapeWriterHepMCfifo(string m_file_name_out) : JetScapeWriter(m_file_name_out), HepMC3::WriterAscii(m_file_name_out) {
     SetId("HepMC writer");
-    if(mkfifo(GetOutputFileName().c_str(), 0666) < 0) {
-      if(errno != EEXIST) {
-        JSWARN << "mkfifo failed,";
-        exit(-1);
-      }
-    }
   };
-  virtual ~JetScapeWriterHepMC();
+  virtual ~JetScapeWriterHepMCfifo();
 
   void Init();
   void Exec();
 
   bool GetStatus() { return failed(); }
   void Close() { close(); }
-
+  // void Open() { open(); }
   // // NEVER use this!
   // // Can work with only one writer, but with a second one it gets called twice
   // void WriteTask(weak_ptr<JetScapeWriter> w);
@@ -82,7 +59,7 @@ private:
   HepMC3::GenEvent evt;
   vector<HepMC3::GenVertexPtr> vertices;
   HepMC3::GenVertexPtr hadronizationvertex;
-
+  static RegisterJetScapeModule<JetScapeWriterHepMCfifo> reg;
   /// WriteEvent needs to know whether it should overwrite final partons status to 1
   bool hashadrons=false; 
   
@@ -124,6 +101,6 @@ private:
   //int m_precision; //!< Output precision
 };
 
-} // end namespace Jetscape
+// } // end namespace Jetscape
 
 #endif
