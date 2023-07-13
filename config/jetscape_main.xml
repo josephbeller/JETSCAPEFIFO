@@ -27,6 +27,7 @@
   <JetScapeWriterAscii> off </JetScapeWriterAscii>
   <JetScapeWriterAsciiGZ> off </JetScapeWriterAsciiGZ>
   <JetScapeWriterHepMC> off </JetScapeWriterHepMC>
+  <JetScapeWriterHepMCfifo> off </JetScapeWriterHepMCfifo>
   <JetScapeWriterRootHepMC> off </JetScapeWriterRootHepMC>
   <JetScapeWriterFinalStatePartonsAscii> off </JetScapeWriterFinalStatePartonsAscii>
   <JetScapeWriterFinalStateHadronsAscii> off </JetScapeWriterFinalStateHadronsAscii>

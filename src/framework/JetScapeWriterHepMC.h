@@ -40,7 +40,7 @@ using HepMC3::GenVertex;
 using HepMC3::GenParticle;
 using HepMC3::GenVertexPtr;
 using HepMC3::GenParticlePtr;
-using namespace std;
+
 namespace Jetscape {
 
 class JetScapeWriterHepMC : public JetScapeWriter, public HepMC3::WriterAscii {
@@ -50,12 +50,6 @@ public:
   JetScapeWriterHepMC(string m_file_name_out)
       : JetScapeWriter(m_file_name_out), HepMC3::WriterAscii(m_file_name_out) {
     SetId("HepMC writer");
-    if(mkfifo(GetOutputFileName().c_str(), 0666) < 0) {
-      if(errno != EEXIST) {
-        JSWARN << "mkfifo failed,";
-        exit(-1);
-      }
-    }
   };
   virtual ~JetScapeWriterHepMC();
 

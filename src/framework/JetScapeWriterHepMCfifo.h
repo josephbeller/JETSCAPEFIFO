@@ -3,6 +3,13 @@
 
 #include <fstream>
 #include <string>
+#include <errno.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <iostream>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #include "JetScapeWriter.h"
 #include "PartonShower.h"
@@ -21,18 +28,27 @@ using HepMC3::GenVertexPtr;
 using HepMC3::GenParticlePtr;
 
 // using namespace Jetscape;
+using namespace std;
 
 
 
-// namespace Jetscape {
-using namespace Jetscape;
+namespace Jetscape {
+
 
 class JetScapeWriterHepMCfifo : public JetScapeWriter, public HepMC3::WriterAscii {
 
 public:
-  JetScapeWriterHepMCfifo() : HepMC3::WriterAscii("") { SetId("HepMC writer"); };
-  JetScapeWriterHepMCfifo(string m_file_name_out) : JetScapeWriter(m_file_name_out), HepMC3::WriterAscii(m_file_name_out) {
-    SetId("HepMC writer");
+  JetScapeWriterHepMCfifo() : HepMC3::WriterAscii("") { SetId("HepMCfifio writer"); };
+  JetScapeWriterHepMCfifo(string m_file_name_out)
+     : JetScapeWriter(m_file_name_out), HepMC3::WriterAscii(m_file_name_out) {
+    SetId("HepMfifo writer");
+    if(mkfifo(GetOutputFileName().c_str(), 0666) < 0) {
+      if(errno != EEXIST) {
+        JSWARN << "mkfifo failed,";
+        exit(-1);
+      }
+    }
+
   };
   virtual ~JetScapeWriterHepMCfifo();
 
@@ -41,6 +57,7 @@ public:
 
   bool GetStatus() { return failed(); }
   void Close() { close(); }
+ 
   // void Open() { open(); }
   // // NEVER use this!
   // // Can work with only one writer, but with a second one it gets called twice
@@ -59,7 +76,7 @@ private:
   HepMC3::GenEvent evt;
   vector<HepMC3::GenVertexPtr> vertices;
   HepMC3::GenVertexPtr hadronizationvertex;
-  static RegisterJetScapeModule<JetScapeWriterHepMCfifo> reg;
+  // static RegisterJetScapeModule<JetScapeWriterHepMCfifo> reg;
   /// WriteEvent needs to know whether it should overwrite final partons status to 1
   bool hashadrons=false; 
   
@@ -101,6 +118,6 @@ private:
   //int m_precision; //!< Output precision
 };
 
-// } // end namespace Jetscape
+} // end namespace Jetscape
 
 #endif

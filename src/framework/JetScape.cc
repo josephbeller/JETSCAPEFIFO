@@ -26,6 +26,7 @@
 
 #ifdef USE_HEPMC
 #include "JetScapeWriterHepMC.h"
+#include "JetScapeWriterHepMCfifo.h"
   #ifdef USE_ROOT
   #include "JetScapeWriterRootHepMC.h"
   #endif
@@ -785,6 +786,7 @@ void JetScape::DetermineWritersFromXML() {
   std::string outputFilenameAscii = outputFilename;
   std::string outputFilenameAsciiGZ = outputFilename;
   std::string outputFilenameHepMC = outputFilename;
+  std::string outputFilenameHepMCfifo = outputFilename;
   std::string outputFilenameRootHepMC = outputFilename;
   std::string outputFilenameFinalStatePartonsAscii = outputFilename;
   std::string outputFilenameFinalStateHadronsAscii = outputFilename;
@@ -802,6 +804,8 @@ void JetScape::DetermineWritersFromXML() {
                         outputFilenameFinalStatePartonsAscii.append("_final_state_partons.dat"));
   CheckForWriterFromXML("JetScapeWriterFinalStateHadronsAscii",
                         outputFilenameFinalStateHadronsAscii.append("_final_state_hadrons.dat"));
+  CheckForWriterFromXML("JetScapeWriterHepMCfifo",
+                        outputFilenameHepMCfifo.append(".hepmc"));
 
   // Check for custom writers
   tinyxml2::XMLElement *element =
@@ -859,7 +863,18 @@ void JetScape::CheckForWriterFromXML(const char *writerName,
              << outputFilename.c_str() << ") added to task list.";
       #endif
 #endif
-    } else {
+    }
+    else if (strcmp(writerName, "JetScapeWriterHepMCfifo") == 0) {
+#ifdef USE_HEPMC
+      VERBOSE(2) << "Manually creating JetScapeWriterHepMCfifo (due to multiple "
+                    "inheritance)";
+      auto writer = std::make_shared<JetScapeWriterHepMCfifo>(outputFilename);
+      Add(writer);
+      JSINFO << "JetScape::DetermineTaskList() -- " << writerName << " ("
+             << outputFilename.c_str() << ") added to task list.";
+#endif  
+    }
+   else {
       VERBOSE(2) << "Writer is NOT created...";
     }
   } else {

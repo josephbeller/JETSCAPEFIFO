@@ -15,18 +15,20 @@
 
 using HepMC3::Units;
 
-using namespace Jetscape;
+// using namespace Jetscape;
 
-// namespace Jetscape {
+namespace Jetscape {
 
-RegisterJetScapeModule<JetScapeWriterHepMCfifo> JetScapeWriterHepMCfifo::reg(
-    "CustomWriterJetScapeHepMCfifo");
+// RegisterJetScapeModule<JetScapeWriterHepMCfifo> JetScapeWriterHepMCfifo::reg(
+//     "CustomWriterJetScapeHepMCfifo");
 
 
 JetScapeWriterHepMCfifo::~JetScapeWriterHepMCfifo() {
   if (GetActive())
     Close();
-}
+    // close fifo
+  unlink(GetOutputFileName().c_str());
+} 
 
 void JetScapeWriterHepMCfifo::WriteHeaderToFile() {
   // Create event here - not actually writing
@@ -64,6 +66,9 @@ void JetScapeWriterHepMCfifo::WriteHeaderToFile() {
   }
 
   evt.set_heavy_ion(heavyion);
+  write_event(evt);
+  vertices.clear();
+  hadronizationvertex = 0;
 
   // also a good moment to initialize the hadron boolean
 }
@@ -319,4 +324,4 @@ void JetScapeWriterHepMCfifo::Exec() {
   // Nothing to do
 }
 
-// }
+} // end namespace Jetscape
