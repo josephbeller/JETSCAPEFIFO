@@ -2,7 +2,7 @@
 
 <jetscape>
   
-  <nEvents> 10 </nEvents>
+  <nEvents> 100 </nEvents>
   
   <outputFilename>myfifo</outputFilename>
   <JetScapeWriterHepMCfifo> on </JetScapeWriterHepMCfifo>
