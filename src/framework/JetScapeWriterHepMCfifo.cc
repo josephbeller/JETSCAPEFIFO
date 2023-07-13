@@ -27,7 +27,7 @@ JetScapeWriterHepMCfifo::~JetScapeWriterHepMCfifo() {
   if (GetActive())
     Close();
     // close fifo
-  unlink(GetOutputFileName().c_str());
+  // unlink(GetOutputFileName().c_str());
 } 
 
 void JetScapeWriterHepMCfifo::WriteHeaderToFile() {
