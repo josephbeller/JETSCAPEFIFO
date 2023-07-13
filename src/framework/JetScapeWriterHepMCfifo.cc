@@ -66,9 +66,9 @@ void JetScapeWriterHepMCfifo::WriteHeaderToFile() {
   }
 
   evt.set_heavy_ion(heavyion);
-  write_event(evt);
-  vertices.clear();
-  hadronizationvertex = 0;
+  // write_event(evt);
+  // vertices.clear();
+  // hadronizationvertex = 0;
 
   // also a good moment to initialize the hadron boolean
 }
