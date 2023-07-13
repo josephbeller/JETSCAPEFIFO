@@ -126,7 +126,9 @@ void JetScapeWriterHepMC::WriteEvent() {
     }
   }
   evt.set_event_number(GetCurrentEvent());
-
+  write_event(evt);
+  vertices.clear();
+  hadronizationvertex = 0;
 }
 
 //This function dumps the particles in a specific parton shower to the event

@@ -18,13 +18,6 @@
 
 #include <fstream>
 #include <string>
-#include <errno.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <iostream>
-#include <sys/types.h>
-#include <sys/stat.h>
 
 #include "JetScapeWriter.h"
 #include "PartonShower.h"
