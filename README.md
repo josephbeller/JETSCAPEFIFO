@@ -1,10 +1,6 @@
-# JETSCAPE 3.5.4
+# JETSCAPE FIFO
 
-The [JETSCAPE](http://jetscape.org) simulation framework is an overarching computational envelope for developing complete event generators for heavy-ion collisions.
-It allows for modular incorporation of a wide variety of existing and future software that simulates different aspects of a heavy-ion collision.
-For a full introduction to JETSCAPE, please see [The JETSCAPE framework](https://arxiv.org/abs/1903.07706).
-
-Please cite [The JETSCAPE framework](https://arxiv.org/abs/1903.07706) if you use this package for scientific work.
+For questions email tmengel@vols.utk.edu
 
 ## Installation
 
