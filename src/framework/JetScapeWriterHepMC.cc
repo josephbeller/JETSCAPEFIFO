@@ -1,36 +1,64 @@
-#include "JetScapeWriterHepMCfifo.h"
+/*******************************************************************************
+ * Copyright (c) The JETSCAPE Collaboration, 2018
+ *
+ * Modular, task-based framework for simulating all aspects of heavy-ion collisions
+ * 
+ * For the list of contributors see AUTHORS.
+ *
+ * Report issues at https://github.com/JETSCAPE/JETSCAPE/issues
+ *
+ * or via email to bugs.jetscape@gmail.com
+ *
+ * Distributed under the GNU General Public License 3.0 (GPLv3 or later).
+ * See COPYING for details.
+ ******************************************************************************/
+
+/*******************************************************************************
+ * kk Sep 22, 2020:  Significant updates to status codes
+ * to conform with Appendix A in https://arxiv.org/pdf/1912.08005.pdf
+ * We will follow Pythia's example of preserving as much of the internal status code as possible
+ * Specifically:
+ - beam particles. We don't have those, yet. If they ever become part of initial
+   state moduls, those module writers MUST set the status to 4, all we do here 
+   is respect that code (for the future). 
+   However, this particle won't be a parton, so we only check that for hadrons.
+   In practice, this will probably require a revamp of the graph structure, both
+   in the framework and in here. Then, probably also use GenEvent::add_beam_particle()
+ - decayed particle. We don't have those either yet, but it's a feature that may 
+   come pretty soon.
+   Here, we use that exclusively to mean decayed unstable hadrons, 
+   e.g. K0S -> pi pi 
+   In this case, the module that produced the hadron list MUST ensure to set the 
+   status of K0s to 2. The pions are final particles, see below.
+ - Final hadrons will all be forced to status 1
+ - Partons: By default, we will accept and use any code provided by the framework
+            within 11<=status<=200 and use the absolute value.
+   Parton exceptions: 
+            1) If the code is not HepMC-legal (|status|<11 or >200, often 0), 
+               we assign 12 to most and 11 to the final partons before hadronization
+               (to mimic the 1, 2 scheme)
+            2) If there are NO hadrons in the event, we assume the user would like to treat 
+               the final partons (like 11 from above) as final particles and assign 1
+ ******************************************************************************/
+
+
+#include "JetScapeWriterHepMC.h"
 #include "JetScapeLogger.h"
 #include "HardProcess.h"
 #include "JetScapeSignalManager.h"
 #include "GTL/node.h"
 #include <GTL/topsort.h>
 
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <iostream>
-
 using HepMC3::Units;
-
-// using namespace Jetscape;
 
 namespace Jetscape {
 
-// RegisterJetScapeModule<JetScapeWriterHepMCfifo> JetScapeWriterHepMCfifo::reg(
-//     "CustomWriterJetScapeHepMCfifo");
-
-
-JetScapeWriterHepMCfifo::~JetScapeWriterHepMCfifo() {
+JetScapeWriterHepMC::~JetScapeWriterHepMC() {
   if (GetActive())
     Close();
-    // close fifo
-  unlink(GetOutputFileName().c_str());
-} 
+}
 
-void JetScapeWriterHepMCfifo::WriteHeaderToFile() {
+void JetScapeWriterHepMC::WriteHeaderToFile() {
   // Create event here - not actually writing
   // TODO: GeV seems right, but I don't think we actually measure in mm
   // Should multiply all lengths by 1e-12 probably
@@ -66,15 +94,12 @@ void JetScapeWriterHepMCfifo::WriteHeaderToFile() {
   }
 
   evt.set_heavy_ion(heavyion);
-  // write_event(evt);
-  // vertices.clear();
-  // hadronizationvertex = 0;
 
   // also a good moment to initialize the hadron boolean
 }
 
-void JetScapeWriterHepMCfifo::WriteEvent() {
-  VERBOSE(1) << "Run JetScapeWriterHepMCfifo: Write event # " << GetCurrentEvent();
+void JetScapeWriterHepMC::WriteEvent() {
+  VERBOSE(1) << "Run JetScapeWriterHepMC: Write event # " << GetCurrentEvent();
   
   // Have collected all vertices now.
   // Add all vertices to the event
@@ -102,13 +127,12 @@ void JetScapeWriterHepMCfifo::WriteEvent() {
   }
   evt.set_event_number(GetCurrentEvent());
   write_event(evt);
-    //   write_event(evt);
   vertices.clear();
   hadronizationvertex = 0;
 }
 
 //This function dumps the particles in a specific parton shower to the event
-void JetScapeWriterHepMCfifo::Write(weak_ptr<PartonShower> ps) {
+void JetScapeWriterHepMC::Write(weak_ptr<PartonShower> ps) {
   shared_ptr<PartonShower> pShower = ps.lock();
   if (!pShower)
     return;
@@ -126,7 +150,7 @@ void JetScapeWriterHepMCfifo::Write(weak_ptr<PartonShower> ps) {
   // 1. Check that our graph is sane
   if (!pShower->is_acyclic())
     throw std::runtime_error(
-        "PROBLEM in JetScapeWriterHepMCfifo: Graph is not acyclic.");
+        "PROBLEM in JetScapeWriterHepMC: Graph is not acyclic.");
 
   // 2.
   topsort topsortsearch;
@@ -147,7 +171,7 @@ void JetScapeWriterHepMCfifo::Write(weak_ptr<PartonShower> ps) {
 
     // Should be the only time we see this node.
     if (vused.find(nIt->id()) != vused.end()){
-      throw std::runtime_error( "PROBLEM in JetScapeWriterHepMCfifo: Reusing a vertex.");
+      throw std::runtime_error( "PROBLEM in JetScapeWriterHepMC: Reusing a vertex.");
     }
     vused[nIt->id()] = true;
 
@@ -192,7 +216,7 @@ void JetScapeWriterHepMCfifo::Write(weak_ptr<PartonShower> ps) {
 	//           "if we pick up medium particles "
 	//        << " but is probably a topsort problem. Try using the code "
 	//           "after this throw() but be very careful.";
-	// throw std::runtime_error("PROBLEM in JetScapeWriterHepMCfifo: Incoming "
+	// throw std::runtime_error("PROBLEM in JetScapeWriterHepMC: Incoming "
 	//                          "particle out of nowhere.");
 	
 	auto in = pShower->GetParton(*inIt);
@@ -227,7 +251,7 @@ void JetScapeWriterHepMCfifo::Write(weak_ptr<PartonShower> ps) {
     if (nIt->outdeg() == 0) {
       if (nIt->indeg() != 1) {
 	// This won't work with multiple incomers (but that's pretty unphysical)
-        throw std::runtime_error("PROBLEM in JetScapeWriterHepMCfifo: Need exactly "
+        throw std::runtime_error("PROBLEM in JetScapeWriterHepMC: Need exactly "
                                  "one parent to clone final state partons.");
       }
       auto in = pShower->GetParton(*(nIt->in_edges_begin()));
@@ -246,7 +270,7 @@ void JetScapeWriterHepMCfifo::Write(weak_ptr<PartonShower> ps) {
       auto outEnd = nIt->out_edges_end();
       for (/* nop */; outIt != outEnd; ++outIt) {
         if (CreatedPartons.find(outIt->id()) != CreatedPartons.end()) {
-          throw std::runtime_error("PROBLEM in JetScapeWriterHepMCfifo: Trying to "
+          throw std::runtime_error("PROBLEM in JetScapeWriterHepMC: Trying to "
                                    "recreate a preexisting GenParticle.");
         }
         auto out = pShower->GetParton(*outIt);
@@ -265,7 +289,7 @@ void JetScapeWriterHepMCfifo::Write(weak_ptr<PartonShower> ps) {
   }
 }
 
-void JetScapeWriterHepMCfifo::Write(weak_ptr<Hadron> h) {
+void JetScapeWriterHepMC::Write(weak_ptr<Hadron> h) {
   auto hadron = h.lock();
   if (!hadron)
     return;
@@ -302,26 +326,14 @@ void JetScapeWriterHepMCfifo::Write(weak_ptr<Hadron> h) {
   hadronizationvertex->add_particle_out(hepmc);
 }
 
-void JetScapeWriterHepMCfifo::Init() {
-  // if (GetActive()) {
-  //   JSINFO << "JetScapeWriterHepMCfifo initialized with output file = "
-  //          << GetOutputFileName();
-  //   // Create the output file
-  //   if(mkfifo(GetOutputFileName().c_str(), 0666) < 0) {
-  //     if (errno != EEXIST) {
-  //       JSINFO << "Error creating FIFO: " << strerror(errno);
-  //       throw std::runtime_error("Error creating FIFO");
-  //     }
-  //   }
-  // }
-   if (GetActive()) {
+void JetScapeWriterHepMC::Init() {
+  if (GetActive()) {
     JSINFO << "JetScape HepMC Writer initialized with output file = "
            << GetOutputFileName();
   }
 }
 
-void JetScapeWriterHepMCfifo::Exec() {
+void JetScapeWriterHepMC::Exec() {
   // Nothing to do
 }
-
 } // end namespace Jetscape
