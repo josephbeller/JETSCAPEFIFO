@@ -1,108 +1,88 @@
 # JETSCAPE FIFO
 
-For questions email tmengel@vols.utk.edu
-
 ## Installation
+These instructions assume you've already installed docker on your computer and added yourself to a group with root privileges per the
+JETSCAPE install directions. If you haven't here are the steps:
+### Step 0: 
+Skip step 0 if you've already installed docker on your computer. 
+ #### macOS
 
-Please see the [Installation Instructions](https://github.com/JETSCAPE/JETSCAPE/wiki/Doc.Installation).
+1. Install Docker Desktop for Mac: https://docs.docker.com/docker-for-mac/install/
+2. Open Docker, go to Preferences --> Advanced and
+    - (i) Set CPUs to max that your computer has (`sysctl -n hw.ncpu`),
+    - (ii) Set memory to what you are willing to give Docker.
 
-## Running JETSCAPE
+ #### linux/windows
 
-The main executable to generate JETSCAPE events is `runJetscape`, located in the `build/` directory.
-To generate JETSCAPE events, you should pass an XML file specifying the settings with which you would like to run:
+1. Install Docker: https://docs.docker.com/install/
+2. Allow your user to run docker (requires admin privileges):
+    ```
+    sudo groupadd docker
+    sudo usermod -aG docker $USER
+    ```
+    Log out and log back in.
 
+### Step 1: Create  New Docker Container
+ Create a new container using a JETSCAPE image that has RIVET dependencies per-installed.
+ #### macOS
 ```
-./runJetscape ../config/jetscape_user.xml
-```
-
-### The XML Configuration
-
-All of the JETSCAPE settings are specified by two XML files:
-- Main XML file: *you don't modify this*
-  - Contains default values for every possible module and parameter
-- User XML file: *you provide this*
-  - Contains a list of which modules to run, and which default parameter values to override
-
-An example User XML file is provided at `config/jetscape_user.xml`. 
-You should adapt this as you like:
- - Set number of events to run
- - Set output format (`Writer` type) and filename 
- - Set which modules to include (in order of execution)
- - Set any default parameter values (from Main XML file) to override
- 
-The Main XML file is located at `config/jetscape_main.xml`, and contains a list of 
-the default parameter settings which will be used for all activated modules (as specified by the User XML file),
-if they are not overridden in the User XML file.
-
-You can pass the path to your user XML file as a command-line argument to the `runJetscape` executable:
-```
-./runJetscape /path/to/my/user_config.xml
+docker run -it -v ~/jetscape-docker:/home/jetscape-rivet-user --name 
+    myJetscapeRivet -p 8888:8888 tmengel/jetscaperivet:latest
 ```
 
-## JETSCAPE Output
-
-JETSCAPE output can be generated in Ascii, gzipped Ascii, or HepMC format,
-and contains a full list of particles and the parton shower history.
-You must specify which format you would like to activate in your User XML file.
-
-### Analysis of JETSCAPE Output
-
-Analysis of JETSCAPE output is generally beyond the scope of the JETSCAPE framework, and is the responsibility of the user.
-The JETSCAPE docker container includes ROOT, python, fastjet, and several other tools that may be useful.
-
-An example reading an ascii output file is provided:
-
-```bash
-./build/readerTest
+ #### linux
+```
+docker run -it -v ~/jetscape-docker:/home/jetscape-rivet-user --name 
+    myJetscapeRivet -p 8888:8888 --user $(id -u):$(id -g) 
+    tmengel/jetscaperivet:latest
 ```
 
-which reads in the generated showers does some DFS search and shows the output. You can generate an output graph format which can be easily visualized using graphViz or other tools like Gephi (GUI for free for Mac) or more adanvanced, graph-tools (Python) and many more. Furthermore, as a "closure" test, the FastJet core package (compiled in our JetScape library) is used to perform a simple jetfinding (on the "final" partons, in graph language, incoming partons in a vertex with no outgoing partons/childs), and since the "shower" is perfectly collinear the jet pT is identical to the hard process parton pT (modulo some random new partons/roots in the final state, see above).  
+For **Windows**, please follow the analogous instructions: https://docs.docker.com/install/
 
-## JETSCAPE Tunes
+Please note that if you have an older OS, you may need to download an older version of docker.]
 
-Currently, there exists a pp tune [PP19](https://arxiv.org/abs/1910.05481), which can be run by:
+
+### Step 2: Clone JETSCAPEFIFO
+Now clone a modified version of JETSCAPE which contains the necessary HepMC3 Fifo writing modules. The only changes are an addition module for HepMC3-fifo output and a directory called **JetScapeWriterHepMCfifo** with an example XML file to run the new module.
+
 ```
-./runJetscape ../config/jetscape_user_PP19.xml
+ git clone https://github.com/tmengel/JETSCAPEFIFO.git
+ ```
+
+### Step 3: Bootstrap RIVET
+Within the docker container you should see **I have no name!@...:~**. This shows that you are in the container. **Make sure you see this before continuing**.
+
+#### linux/windows
 ```
+ cd /JETSCAPEFIFO/external_packages
+./get_rivet
+```
+#### mac
+```
+ cd /JETSCAPEFIFO/external_packages
+./get_rivet mac
+```
+This will bootstrap rivet in a new directory `~/RIVET`. This process will take about 15-20 minutes. 
 
-Tuning of Pb-Pb is ongoing.
-Several example hydro profiles can be downloaded using `examples/get_hydroSample*`.
+### Step 4: Build JETSCAPE
+roceed to build this version of JETSCAPE the same way you would for the original version [Installation Instructions](https://github.com/JETSCAPE/JETSCAPE/wiki/Doc.Installation).
 
-## Developing modules
+```
+cd JETSCAPEFIFO
+mkdir build
+cd build
+cmake .. -DCMAKE_CXX_STANDARD=14
+make -j4
+```
+## Running JETSCAPE and RIVET
+To run JETSCAPE with RIVET using the fifo-hepmc writer use the `jetscape_fifo.xml` located in the `config` directory.
+Make sure the output file matches the file piped into RIVET. Execute the `runJetscape` executable located in the JETSCAPE build directory in the background and send the output to RIVET. In the `~/JETSCAPEFIFO/build` directory run:
+```
+./runJetscape ../config/jetscape_fifo.xml & 
+    rivet --analysis=<ANALYSIS NAME> --ignore-beams -o test.yoda myfifo.hepmc
+```
+The `/config/jetscape_fifo.xml` is an example of how to use the **JetScapeWriterHepMCfifo** module.
 
-To develop a new JETSCAPE module, you should inherit from the relevant base class (InitialState, JetEnergyLoss, etc.) 
-and implement the relevant initialization and execution functions, described in detail in [The JETSCAPE framework](https://arxiv.org/abs/1903.07706)
-Section 3.3.
-
-Additionally, you must register your module with the framework with the following steps:
-- Add the following to your module .h:
-  ```
-  private:
-  // Allows the registration of the module so that it is available to be used by the Jetscape framework.
-  static RegisterJetScapeModule<MyClass> reg;
-  ```
-- Add the following to your module .cc: 
-  ```
-  // Register the module with the base class
-  RegisterJetScapeModule<MyClass> MyClass::reg("CustomModuleBlahBlah");
-  ```
-where `MyClass` is the name of your class, and "CustomModuleBlahBlah" is the name that should be added to the XML configuration.
-You can see any of the established modules, e.g.  `Matter`, as an example.
-
-Important Note: In the case of custom modules, you *must* start your module name with "CustomModule..." 
-in order for it to be recognized by the framework (for custom writers, you must start the name with "CustomWriter"). 
-
-New modules should not use multiple inheritance, if avoidable.
-
-Once these steps are done, one can just add the module name to the XML, and it will be automatically available to run in JETSCAPE.
 
 ## Troubleshooting
-
-If you encounter a problem, please report the issue [here](https://github.com/JETSCAPE/JETSCAPE/issues).
-Please be sure to include enough information so that we can reproduce your issue: your platform, JETSCAPE version,
-configuration file, and anything else that may be relevant.
-
-## Contributing to JETSCAPE
-
-If you would like to contribute code to JETSCAPE (new module, feature, bug fix, etc.) please open 
-a [Pull Request](https://github.com/JETSCAPE/JETSCAPE/pulls) with your changes, or an [Issue](https://github.com/JETSCAPE/JETSCAPE/issues) describing what you intend to do. For further details, see [Tips for git management](https://github.com/JETSCAPE/JETSCAPE/wiki/Tips-for-git-management).
+For questions email tmengel@vols.utk.edu
