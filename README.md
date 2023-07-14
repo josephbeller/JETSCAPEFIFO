@@ -55,12 +55,12 @@ Within the docker container you should see **I have no name!@...:~**. This shows
 #### linux/windows
 ```
  cd /JETSCAPEFIFO/external_packages
-./get_rivet
+./get_rivet.sh
 ```
 #### mac
 ```
  cd /JETSCAPEFIFO/external_packages
-./get_rivet mac
+./get_rivet.sh mac
 ```
 This will bootstrap rivet in a new directory `~/RIVET`. This process will take about 15-20 minutes. 
 
