@@ -26,7 +26,10 @@ Skip step 0 if you've already installed docker on your computer.
  Create a new container using a JETSCAPE image that has RIVET dependencies per-installed.
  #### macOS
 ```
-docker run -it -v ~/jetscape-docker:/home/jetscape-rivet-user --name 
+cd ~
+mkdir jetscape-rivet-docker
+cd jetscape-rivet-docker
+docker run -it -v ~/jetscape-rivet-docker:/home/jetscape-rivet-user --name 
     myJetscapeRivet -p 8888:8888 tmengel/jetscaperivet:latest
 ```
 
@@ -41,6 +44,11 @@ For **Windows**, please follow the analogous instructions: https://docs.docker.c
 
 Please note that if you have an older OS, you may need to download an older version of docker.]
 
+### Step 1-b 
+Make sure that you are inside the correct directory in the docker.  
+```
+cd /home/jetscape-rivet-user
+```
 
 ### Step 2: Clone JETSCAPEFIFO
 Now clone a modified version of JETSCAPE which contains the necessary HepMC3 Fifo writing modules. The only changes are an addition module for HepMC3-fifo output and a directory called **JetScapeWriterHepMCfifo** with an example XML file to run the new module.
