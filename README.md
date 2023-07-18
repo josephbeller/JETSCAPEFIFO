@@ -8,7 +8,7 @@ Skip step 0 if you've already installed docker on your computer.
  #### macOS
 
 1. Install Docker Desktop for Mac: https://docs.docker.com/docker-for-mac/install/
-2. Open Docker, go to Preferences --> Advanced and
+2. Open Docker, go to Preferences (gear icon) --> Resources --> Advanced and
     - (i) Set CPUs to max that your computer has (`sysctl -n hw.ncpu`),
     - (ii) Set memory to what you are willing to give Docker.
 
@@ -35,8 +35,7 @@ docker run -it -v ~/jetscape-rivet-docker:/home/jetscape-rivet-user --name
 
  #### linux
 ```
-docker run -it -v ~/jetscape-docker:/home/jetscape-rivet-user --name 
-    myJetscapeRivet -p 8888:8888 --user $(id -u):$(id -g) 
+docker run -it -v ~/jetscape-docker:/home/jetscape-rivet-user --name myJetscapeRivet -p 8888:8888 --user $(id -u):$(id -g) 
     tmengel/jetscaperivet:latest
 ```
 
@@ -67,7 +66,7 @@ Within the docker container you should see **I have no name!@...:~**. This shows
 ```
 #### mac
 ```
- cd /JETSCAPEFIFO/external_packages
+ cd JETSCAPEFIFO/external_packages
 ./get_rivet.sh mac
 ```
 This will bootstrap rivet in a new directory `~/RIVET`. This process will take about 15-20 minutes. 
