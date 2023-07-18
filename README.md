@@ -72,10 +72,10 @@ Within the docker container you should see **I have no name!@...:~**. This shows
 This will bootstrap rivet in a new directory `~/RIVET`. This process will take about 15-20 minutes. 
 
 ### Step 4: Build JETSCAPE
-roceed to build this version of JETSCAPE the same way you would for the original version [Installation Instructions](https://github.com/JETSCAPE/JETSCAPE/wiki/Doc.Installation).
+Proceed to build this version of JETSCAPE the same way you would for the original version [Installation Instructions](https://github.com/JETSCAPE/JETSCAPE/wiki/Doc.Installation).
 
 ```
-cd JETSCAPEFIFO
+cd /home/jetscape-rivet-user/JETSCAPEFIFO
 mkdir build
 cd build
 cmake .. -DCMAKE_CXX_STANDARD=14
